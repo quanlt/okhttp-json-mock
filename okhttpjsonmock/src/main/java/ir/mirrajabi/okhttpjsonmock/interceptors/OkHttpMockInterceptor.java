@@ -12,6 +12,8 @@ import com.google.gson.internal.LinkedTreeMap;
 
 import java.io.IOException;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ir.mirrajabi.okhttpjsonmock.helpers.ResourcesHelper;
 import ir.mirrajabi.okhttpjsonmock.models.MockedResponse;
@@ -61,6 +63,14 @@ public class OkHttpMockInterceptor implements Interceptor {
         if (!query.equals(""))
             sym = "/";
         String path = url.encodedPath() + sym + query;
+        String mockUrls = ResourcesHelper.loadAssetTextAsString(mContext, "mockUrls.txt");
+        if (mockUrls != null) {
+            Pattern p = Pattern.compile("\\b" + path.substring(1).toLowerCase() + "\\b");
+            Matcher m = p.matcher(mockUrls);
+            if (!m.find()) {
+                return chain.proceed(chain.request());
+            }
+        }
         String responseString = ResourcesHelper.loadAssetTextAsString(mContext,
                 mBasePath + path.substring(1).toLowerCase() + ".json");
         if (responseString == null)
@@ -80,7 +90,7 @@ public class OkHttpMockInterceptor implements Interceptor {
         JsonObject jsonObject = gson.toJsonTree(mockedResponse.getResponse()).getAsJsonObject();
         String result = jsonObject.toString();
         JsonArray items = jsonObject.getAsJsonArray("items");
-        if (items != null)
+        if (items != null && jsonObject.entrySet().size() == 1)
             result = gson.toJson(items);
         try {
             Thread.sleep(Math.abs(new Random()

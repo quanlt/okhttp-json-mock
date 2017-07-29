@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
         mUsersService.getUsers(1)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
-                .retry(3)
                 .subscribe(userModels -> mUsersAdapter.addData(userModels),
                         throwable -> throwable.printStackTrace());
 
